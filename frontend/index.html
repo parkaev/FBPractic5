@@ -1,0 +1,193 @@
+<!-- frontend/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FBPrac5</title>
+    <link rel="stylesheet" href="./styles/global.css">
+</head>
+<body>
+<div class="container">
+    <!-- Registration Form -->
+    <div id="registerSection">
+        <h2>Register</h2>
+        <form id="registerForm">
+            <div class="form-group">
+                <input type="text" id="registerUsername" placeholder="Username" required>
+            </div>
+            <div class="form-group">
+                <input type="password" id="registerPassword" placeholder="Password" required>
+            </div>
+            <button type="submit">Register</button>
+        </form>
+        <p>Already have an account? <a href="#" onclick="showLogin()">Login here</a></p>
+    </div>
+
+    <!-- Login Form -->
+    <div id="loginSection" class="hidden">
+        <h2>Login</h2>
+        <form id="loginForm">
+            <div class="form-group">
+                <input type="text" id="loginUsername" placeholder="Username" required>
+            </div>
+            <div class="form-group">
+                <input type="password" id="loginPassword" placeholder="Password" required>
+            </div>
+            <button type="submit">Login</button>
+        </form>
+        <p>Don't have an account? <a href="#" onclick="showRegister()">Register here</a></p>
+    </div>
+
+    <!-- Protected Content -->
+    <div id="protectedSection" class="hidden">
+        <h2>Protected Content</h2>
+        <button onclick="fetchProtectedData()">Get Protected Data</button>
+        <button onclick="logout()">Logout</button>
+        <div id="protectedContent"></div>
+    </div>
+
+    <!-- Messages Container -->
+    <div id="messages"></div>
+</div>
+
+<script>
+    // app.js
+    const API_URL = 'http://localhost:3000';
+    let currentToken = localStorage.getItem('token') || null;
+
+    // DOM Elements
+    const registerSection = document.getElementById('registerSection');
+    const loginSection = document.getElementById('loginSection');
+    const protectedSection = document.getElementById('protectedSection');
+    const messagesContainer = document.getElementById('messages');
+
+    // Check initial auth state
+    if (currentToken) {
+        showProtectedSection();
+    }
+
+    // Show messages
+    function showMessage(type, text) {
+        const messageEl = document.createElement('div');
+        messageEl.className = `message ${type}`;
+        messageEl.textContent = text;
+        messagesContainer.appendChild(messageEl);
+
+        setTimeout(() => {
+            messageEl.remove();
+        }, 5000);
+    }
+
+    // Form visibility
+    function showLogin() {
+        registerSection.classList.add('hidden');
+        loginSection.classList.remove('hidden');
+    }
+
+    function showRegister() {
+        loginSection.classList.add('hidden');
+        registerSection.classList.remove('hidden');
+    }
+
+    function showProtectedSection() {
+        registerSection.classList.add('hidden');
+        loginSection.classList.add('hidden');
+        protectedSection.classList.remove('hidden');
+    }
+
+    // Registration handler
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const username = document.getElementById('registerUsername').value;
+        const password = document.getElementById('registerPassword').value;
+
+        try {
+            const response = await fetch(`${API_URL}/register`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showMessage('success', 'Registration successful! Please login.');
+                showLogin();
+            } else {
+                showMessage('error', data.message || 'Registration failed');
+            }
+        } catch (error) {
+            showMessage('error', 'Network error. Please try again.');
+        }
+    });
+
+    // Login handler
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const username = document.getElementById('loginUsername').value;
+        const password = document.getElementById('loginPassword').value;
+
+        try {
+            const response = await fetch(`${API_URL}/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                currentToken = data.token;
+                localStorage.setItem('token', currentToken);
+                showProtectedSection();
+                showMessage('success', 'Login successful!');
+            } else {
+                showMessage('error', data.message || 'Login failed');
+            }
+        } catch (error) {
+            showMessage('error', 'Network error. Please try again.');
+        }
+    });
+
+    // Fetch protected data
+    async function fetchProtectedData() {
+        try {
+            const response = await fetch(`${API_URL}/protected`, {
+                headers: {
+                    'Authorization': `Bearer ${currentToken}`
+                }
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                document.getElementById('protectedContent').innerHTML = `
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+            } else {
+                showMessage('error', 'Failed to fetch protected data');
+            }
+        } catch (error) {
+            showMessage('error', 'Network error. Please try again.');
+        }
+    }
+
+    // Logout handler
+    function logout() {
+        localStorage.removeItem('token');
+        currentToken = null;
+        protectedSection.classList.add('hidden');
+        registerSection.classList.remove('hidden');
+        document.getElementById('protectedContent').innerHTML = '';
+        showMessage('success', 'Logged out successfully');
+    }
+</script>
+</body>
+</html>
