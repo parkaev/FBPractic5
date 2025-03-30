@@ -1,73 +1,73 @@
 <!-- frontend/index.html -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FBPrac5</title>
+    <title>Аутентификация с JWT</title>
     <link rel="stylesheet" href="./styles/global.css">
 </head>
 <body>
 <div class="container">
-    <!-- Registration Form -->
+    <!-- Форма регистрации -->
     <div id="registerSection">
-        <h2>Register</h2>
+        <h2>Регистрация</h2>
         <form id="registerForm">
             <div class="form-group">
-                <input type="text" id="registerUsername" placeholder="Username" required>
+                <input type="text" id="registerUsername" placeholder="Имя пользователя" required>
             </div>
             <div class="form-group">
-                <input type="password" id="registerPassword" placeholder="Password" required>
+                <input type="password" id="registerPassword" placeholder="Пароль" required>
             </div>
-            <button type="submit">Register</button>
+            <button type="submit">Зарегистрироваться</button>
         </form>
-        <p>Already have an account? <a href="#" onclick="showLogin()">Login here</a></p>
+        <p>Уже есть аккаунт? <a href="#" onclick="showLogin()">Войти здесь</a></p>
     </div>
 
-    <!-- Login Form -->
+    <!-- Форма входа -->
     <div id="loginSection" class="hidden">
-        <h2>Login</h2>
+        <h2>Вход в систему</h2>
         <form id="loginForm">
             <div class="form-group">
-                <input type="text" id="loginUsername" placeholder="Username" required>
+                <input type="text" id="loginUsername" placeholder="Имя пользователя" required>
             </div>
             <div class="form-group">
-                <input type="password" id="loginPassword" placeholder="Password" required>
+                <input type="password" id="loginPassword" placeholder="Пароль" required>
             </div>
-            <button type="submit">Login</button>
+            <button type="submit">Войти</button>
         </form>
-        <p>Don't have an account? <a href="#" onclick="showRegister()">Register here</a></p>
+        <p>Нет аккаунта? <a href="#" onclick="showRegister()">Зарегистрируйтесь здесь</a></p>
     </div>
 
-    <!-- Protected Content -->
+    <!-- Защищённый раздел -->
     <div id="protectedSection" class="hidden">
-        <h2>Protected Content</h2>
-        <button onclick="fetchProtectedData()">Get Protected Data</button>
-        <button onclick="logout()">Logout</button>
+        <h2>Защищённый контент</h2>
+        <button onclick="fetchProtectedData()">Получить данные</button>
+        <button onclick="logout()">Выйти</button>
         <div id="protectedContent"></div>
     </div>
 
-    <!-- Messages Container -->
+    <!-- Контейнер для сообщений -->
     <div id="messages"></div>
 </div>
 
 <script>
-    // app.js
+    // Конфигурация
     const API_URL = 'http://localhost:3000';
     let currentToken = localStorage.getItem('token') || null;
 
-    // DOM Elements
+    // Элементы DOM
     const registerSection = document.getElementById('registerSection');
     const loginSection = document.getElementById('loginSection');
     const protectedSection = document.getElementById('protectedSection');
     const messagesContainer = document.getElementById('messages');
 
-    // Check initial auth state
+    // Проверка аутентификации при загрузке
     if (currentToken) {
         showProtectedSection();
     }
 
-    // Show messages
+    // Функция для отображения сообщений
     function showMessage(type, text) {
         const messageEl = document.createElement('div');
         messageEl.className = `message ${type}`;
@@ -79,7 +79,7 @@
         }, 5000);
     }
 
-    // Form visibility
+    // Управление видимостью разделов
     function showLogin() {
         registerSection.classList.add('hidden');
         loginSection.classList.remove('hidden');
@@ -96,7 +96,7 @@
         protectedSection.classList.remove('hidden');
     }
 
-    // Registration handler
+    // Обработчик регистрации
     document.getElementById('registerForm').addEventListener('submit', async (e) => {
         e.preventDefault();
 
@@ -115,17 +115,17 @@
             const data = await response.json();
 
             if (response.ok) {
-                showMessage('success', 'Registration successful! Please login.');
+                showMessage('success', 'Регистрация прошла успешно! Теперь войдите в систему.');
                 showLogin();
             } else {
-                showMessage('error', data.message || 'Registration failed');
+                showMessage('error', data.message || 'Ошибка регистрации');
             }
         } catch (error) {
-            showMessage('error', 'Network error. Please try again.');
+            showMessage('error', 'Ошибка сети. Попробуйте снова.');
         }
     });
 
-    // Login handler
+    // Обработчик входа
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
 
@@ -147,16 +147,16 @@
                 currentToken = data.token;
                 localStorage.setItem('token', currentToken);
                 showProtectedSection();
-                showMessage('success', 'Login successful!');
+                showMessage('success', 'Вход выполнен успешно!');
             } else {
-                showMessage('error', data.message || 'Login failed');
+                showMessage('error', data.message || 'Ошибка входа');
             }
         } catch (error) {
-            showMessage('error', 'Network error. Please try again.');
+            showMessage('error', 'Ошибка сети. Попробуйте снова.');
         }
     });
 
-    // Fetch protected data
+    // Получение защищённых данных
     async function fetchProtectedData() {
         try {
             const response = await fetch(`${API_URL}/protected`, {
@@ -172,21 +172,21 @@
                         <pre>${JSON.stringify(data, null, 2)}</pre>
                     `;
             } else {
-                showMessage('error', 'Failed to fetch protected data');
+                showMessage('error', 'Ошибка доступа к данным');
             }
         } catch (error) {
-            showMessage('error', 'Network error. Please try again.');
+            showMessage('error', 'Ошибка сети. Попробуйте снова.');
         }
     }
 
-    // Logout handler
+    // Выход из системы
     function logout() {
         localStorage.removeItem('token');
         currentToken = null;
         protectedSection.classList.add('hidden');
         registerSection.classList.remove('hidden');
         document.getElementById('protectedContent').innerHTML = '';
-        showMessage('success', 'Logged out successfully');
+        showMessage('success', 'Вы успешно вышли из системы');
     }
 </script>
 </body>
